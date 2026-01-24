@@ -1,15 +1,24 @@
 import pygame
 
 pygame.init()
-screen = pygame.display.set_mode((400, 300))
+
+# --- 基準となるウィンドウサイズ ---
+BASE_W, BASE_H = 400, 300
+
+screen = pygame.display.set_mode((BASE_W, BASE_H), pygame.RESIZABLE)
 clock = pygame.time.Clock()
 
 last_switch = pygame.time.get_ticks()
 current_frame = 0
-frames = [
-    pygame.image.load("frame0.png").convert_alpha(),
-    pygame.image.load("frame1.png").convert_alpha(),
-]
+
+# --- 元画像を保持 ---
+raw_frames = []
+for i in range(2):
+    img = pygame.image.load(f"frame{i}.png").convert_alpha()
+    raw_frames.append(img)
+
+frames = []
+prev_scale = None  # スケール変更検出用
 
 running = True
 while running:
@@ -17,15 +26,41 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
-    # 画面をクリア
+    # --- 現在のウィンドウサイズ ---
+    win_w, win_h = screen.get_size()
+
+    # --- ウィンドウサイズからスケールを計算 ---
+    scale_x = win_w / BASE_W * 10
+    scale_y = win_h / BASE_H * 10
+    SCALE = min(scale_x, scale_y)  # 縦横比を維持
+
+    # --- スケールが変わったときだけ再生成 ---
+    if SCALE != prev_scale:
+        frames.clear()
+        for img in raw_frames:
+            w, h = img.get_size()
+            scaled = pygame.transform.scale(
+                img,
+                (int(w * SCALE), int(h * SCALE))
+            )
+            frames.append(scaled)
+        prev_scale = SCALE
+
+    # --- 画面をクリア ---
     screen.fill((0, 0, 0))
 
-    # キャラを表示
+    # --- アニメーション更新 ---
     now = pygame.time.get_ticks()
     if now - last_switch >= 200:
         current_frame = (current_frame + 1) % len(frames)
         last_switch = now
-    screen.blit(frames[current_frame], (135, 95))
+
+    img = frames[current_frame]
+
+    # --- 中央に描画 ---
+    x = (win_w - img.get_width()) // 2
+    y = (win_h - img.get_height()) // 2
+    screen.blit(img, (x, y))
 
     # 画面を更新
     pygame.display.flip()
