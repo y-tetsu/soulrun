@@ -11,13 +11,23 @@ clock = pygame.time.Clock()
 last_switch = pygame.time.get_ticks()
 current_frame = 0
 
-# --- 元画像を保持 ---
-raw_frames = []
-for i in range(2):
-    img = pygame.image.load(f"frame{i}.png").convert_alpha()
-    raw_frames.append(img)
+# --- キャラの状態 ---
+state = "idle"  # "idle" or "jump"
 
-frames = []
+# --- 元画像 ---
+raw_frames = {
+    "idle": [
+        pygame.image.load("idle0.png").convert_alpha(),
+        pygame.image.load("idle1.png").convert_alpha(),
+    ],
+    "jump": [
+        pygame.image.load("jump0.png").convert_alpha(),
+        pygame.image.load("jump1.png").convert_alpha(),
+    ]
+}
+
+# --- スケール済み画像キャッシュ ---
+scaled_frames = {}
 prev_scale = None  # スケール変更検出用
 
 running = True
@@ -25,6 +35,17 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+
+        # ★ マウス操作で状態を切り替える
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            state = "jump"
+            current_frame = 0
+            last_switch = pygame.time.get_ticks()
+
+        if event.type == pygame.MOUSEBUTTONUP:
+            state = "idle"
+            current_frame = 0
+            last_switch = pygame.time.get_ticks()
 
     # --- 現在のウィンドウサイズ ---
     win_w, win_h = screen.get_size()
@@ -36,15 +57,25 @@ while running:
 
     # --- スケールが変わったときだけ再生成 ---
     if SCALE != prev_scale:
-        frames.clear()
-        for img in raw_frames:
-            w, h = img.get_size()
-            scaled = pygame.transform.scale(
-                img,
-                (int(w * SCALE), int(h * SCALE))
-            )
-            frames.append(scaled)
+        scaled_frames.clear()
+
+        for key, imgs in raw_frames.items():
+            scaled_list = []
+            for img in imgs:
+                w, h = img.get_size()
+                scaled = pygame.transform.scale(
+                    img,
+                    (int(w * SCALE), int(h * SCALE))
+                )
+                scaled_list.append(scaled)
+            scaled_frames[key] = scaled_list
+
         prev_scale = SCALE
+        current_frame = 0
+        last_switch = pygame.time.get_ticks()
+
+    # --- 現在の状態のフレームを参照 ---
+    frames = scaled_frames[state]
 
     # --- 画面をクリア ---
     screen.fill((0, 0, 0))
