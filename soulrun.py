@@ -3,22 +3,36 @@ import pygame
 pygame.init()
 
 # --- 基準となるウィンドウサイズ ---
-BASE_W, BASE_H = 400, 300
+BASE_W, BASE_H = 256, 240
 
-screen = pygame.display.set_mode((BASE_W, BASE_H), pygame.RESIZABLE)
+screen = pygame.display.set_mode((BASE_W*2, BASE_H*2), pygame.RESIZABLE)
 clock = pygame.time.Clock()
+
+# -------------------------
+# 背景
+# -------------------------
+bg = pygame.image.load("background.png").convert()
+bg_x = 0
+SCROLL_SPEED = 3
 
 last_switch = pygame.time.get_ticks()
 current_frame = 0
 
 # --- キャラの状態 ---
-state = "idle"  # "idle" or "jump"
+state = "run"  # "idle" or "run" or "jump"
+ANIMATION_SWITCH_TIME = 200 * 3 // SCROLL_SPEED
 
 # --- 元画像 ---
 raw_frames = {
     "idle": [
         pygame.image.load("idle0.png").convert_alpha(),
         pygame.image.load("idle1.png").convert_alpha(),
+    ],
+    "run": [
+        pygame.image.load("run0.png").convert_alpha(),
+        pygame.image.load("run1.png").convert_alpha(),
+        pygame.image.load("run2.png").convert_alpha(),
+        pygame.image.load("run3.png").convert_alpha(),
     ],
     "jump": [
         pygame.image.load("jump0.png").convert_alpha(),
@@ -43,7 +57,7 @@ while running:
             last_switch = pygame.time.get_ticks()
 
         if event.type == pygame.MOUSEBUTTONUP:
-            state = "idle"
+            state = "run"
             current_frame = 0
             last_switch = pygame.time.get_ticks()
 
@@ -51,8 +65,8 @@ while running:
     win_w, win_h = screen.get_size()
 
     # --- ウィンドウサイズからスケールを計算 ---
-    scale_x = win_w / BASE_W * 10
-    scale_y = win_h / BASE_H * 10
+    scale_x = win_w / BASE_W
+    scale_y = win_h / BASE_H
     SCALE = min(scale_x, scale_y)  # 縦横比を維持
 
     # --- スケールが変わったときだけ再生成 ---
@@ -77,20 +91,32 @@ while running:
     # --- 現在の状態のフレームを参照 ---
     frames = scaled_frames[state]
 
-    # --- 画面をクリア ---
-    screen.fill((0, 0, 0))
+    # -------------------------
+    # 背景スクロール
+    # -------------------------
+    if bg_x <= -win_w:
+        bg_x = 0
 
-    # --- アニメーション更新 ---
+    bg_scaled = pygame.transform.scale(bg, (win_w, win_h))
+
+    screen.blit(bg_scaled, (bg_x, 0))
+    screen.blit(bg_scaled, (bg_x + win_w, 0))
+
+    bg_x -= SCROLL_SPEED
+
+    # -------------------------
+    # アニメーション
+    # -------------------------
     now = pygame.time.get_ticks()
-    if now - last_switch >= 200:
+    if now - last_switch >= ANIMATION_SWITCH_TIME:
         current_frame = (current_frame + 1) % len(frames)
         last_switch = now
 
     img = frames[current_frame]
 
-    # --- 中央に描画 ---
-    x = (win_w - img.get_width()) // 2
-    y = (win_h - img.get_height()) // 2
+    # --- 左下あたりに描画 ---
+    x = (win_w - img.get_width()) // 5
+    y = (177 * SCALE) - img.get_height()
     screen.blit(img, (x, y))
 
     # 画面を更新
