@@ -25,8 +25,8 @@ ANIMATION_SWITCH_TIME = 200 * 3 // SCROLL_SPEED
 # ジャンプ物理
 vy = 0
 GRAVITY = 0.6
-JUMP_POWER = 10
-JUMP_HOLD_ACCEL = 0.25
+LOW_GRAVITY = 0.28
+JUMP_POWER = 8.5
 jump_hold = False
 y_offset = 0
 
@@ -104,12 +104,13 @@ while running:
     # ジャンプ物理処理
     # -------------------------
     if y_offset != 0 or vy != 0:
+        gravity = GRAVITY
 
         # 可変ジャンプ
         if jump_hold and vy < 0:
-            vy -= JUMP_HOLD_ACCEL
+            gravity = LOW_GRAVITY
 
-        vy += GRAVITY
+        vy += gravity
         y_offset += vy
 
         # 状態切り替え
