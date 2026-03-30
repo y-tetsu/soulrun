@@ -19,8 +19,16 @@ last_switch = pygame.time.get_ticks()
 current_frame = 0
 
 # --- キャラの状態 ---
-state = "run"  # "idle" or "run" or "jump"
+state = "run"  # "idle" or "run" or "jump_up" or "jump_down"
 ANIMATION_SWITCH_TIME = 200 * 3 // SCROLL_SPEED
+
+# ジャンプ物理
+vy = 0
+GRAVITY = 0.6
+JUMP_POWER = 10
+JUMP_HOLD_ACCEL = 0.25
+jump_hold = False
+y_offset = 0
 
 # --- 元画像 ---
 raw_frames = {
@@ -34,9 +42,13 @@ raw_frames = {
         pygame.image.load("run2.png").convert_alpha(),
         pygame.image.load("run3.png").convert_alpha(),
     ],
-    "jump": [
-        pygame.image.load("jump0.png").convert_alpha(),
-        pygame.image.load("jump1.png").convert_alpha(),
+    "jump_up": [
+        pygame.image.load("jump_up0.png").convert_alpha(),
+        pygame.image.load("jump_up1.png").convert_alpha(),
+    ],
+    "jump_down": [
+        pygame.image.load("jump_down0.png").convert_alpha(),
+        pygame.image.load("jump_down1.png").convert_alpha(),
     ]
 }
 
@@ -50,16 +62,16 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
-        # ★ マウス操作で状態を切り替える
+        # マウスクリックでジャンプ開始
         if event.type == pygame.MOUSEBUTTONDOWN:
-            state = "jump"
-            current_frame = 0
-            last_switch = pygame.time.get_ticks()
+            if y_offset == 0:  # 地面にいる
+                vy = -JUMP_POWER
+                jump_hold = True
+                state = "jump_up"
+                current_frame = 0
 
         if event.type == pygame.MOUSEBUTTONUP:
-            state = "run"
-            current_frame = 0
-            last_switch = pygame.time.get_ticks()
+            jump_hold = False
 
     # --- 現在のウィンドウサイズ ---
     win_w, win_h = screen.get_size()
@@ -87,6 +99,30 @@ while running:
         prev_scale = SCALE
         current_frame = 0
         last_switch = pygame.time.get_ticks()
+
+    # -------------------------
+    # ジャンプ物理処理
+    # -------------------------
+    if y_offset != 0 or vy != 0:
+
+        # 可変ジャンプ
+        if jump_hold and vy < 0:
+            vy -= JUMP_HOLD_ACCEL
+
+        vy += GRAVITY
+        y_offset += vy
+
+        # 状態切り替え
+        if vy < 0:
+            state = "jump_up"
+        else:
+            state = "jump_down"
+
+        # 着地
+        if y_offset > 0:
+            y_offset = 0
+            vy = 0
+            state = "run"
 
     # --- 現在の状態のフレームを参照 ---
     frames = scaled_frames[state]
@@ -116,7 +152,10 @@ while running:
 
     # --- 左下あたりに描画 ---
     x = (win_w - img.get_width()) // 5
-    y = (177 * SCALE) - img.get_height()
+    base_y = (177 * SCALE) - img.get_height()
+
+    y = base_y + y_offset  # ジャンプ反映
+
     screen.blit(img, (x, y))
 
     # 画面を更新
