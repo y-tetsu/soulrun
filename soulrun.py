@@ -64,11 +64,11 @@ while running:
 
         # マウスクリックでジャンプ開始
         if event.type == pygame.MOUSEBUTTONDOWN:
-            if y_offset == 0:  # 地面にいる
-                vy = JUMP_POWER
-                jump_hold = True
-                state = "jump_up"
-                current_frame = 0
+            if y_offset == 0:      # 地面にいる
+                vy = JUMP_POWER    # ジャンプの初速
+                jump_hold = True   # ジャンプクリック中
+                state = "jump_up"  # 上昇中のモーション
+                current_frame = 0  # アニメーションのフレームを初期化
 
         if event.type == pygame.MOUSEBUTTONUP:
             jump_hold = False
