@@ -13,7 +13,7 @@ clock = pygame.time.Clock()
 # -------------------------
 bg = pygame.image.load("background.png").convert()
 bg_x = 0
-SCROLL_SPEED = 3
+SCROLL_SPEED = 6
 
 last_switch = pygame.time.get_ticks()
 current_frame = 0
@@ -23,11 +23,11 @@ state = "run"  # "idle" or "run" or "jump_up" or "jump_down"
 ANIMATION_SWITCH_TIME = 200 * 3 // SCROLL_SPEED
 
 # ジャンプ物理
-vy = 0
-GRAVITY = 0.6
-LOW_GRAVITY = 0.28
-JUMP_POWER = 8.5
+GRAVITY = 0.5
+JUMP_POWER = -11
+JUMP_CUT = -2
 jump_hold = False
+vy = 0
 y_offset = 0
 
 # --- 元画像 ---
@@ -65,7 +65,7 @@ while running:
         # マウスクリックでジャンプ開始
         if event.type == pygame.MOUSEBUTTONDOWN:
             if y_offset == 0:  # 地面にいる
-                vy = -JUMP_POWER
+                vy = JUMP_POWER
                 jump_hold = True
                 state = "jump_up"
                 current_frame = 0
@@ -104,13 +104,13 @@ while running:
     # ジャンプ物理処理
     # -------------------------
     if y_offset != 0 or vy != 0:
-        gravity = GRAVITY
+        # 重力
+        vy += GRAVITY
 
-        # 可変ジャンプ
-        if jump_hold and vy < 0:
-            gravity = LOW_GRAVITY
+        # ジャンプカット
+        if not jump_hold and vy < JUMP_CUT:
+            vy = JUMP_CUT
 
-        vy += gravity
         y_offset += vy
 
         # 状態切り替え
