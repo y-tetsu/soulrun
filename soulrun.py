@@ -35,7 +35,7 @@ raw_scores = [
 ]
 
 # --- キャラの状態 ---
-state = "run"  # "idle" or "run" or "jump_up" or "jump_down" or "damaged"
+state = "run"  # "run" or "jump_up" or "jump_down" or "damaged"
 ANIMATION_SWITCH_TIME = 200 * 3 // SCROLL_SPEED
 
 # ジャンプ物理
@@ -53,10 +53,6 @@ DAMAGED_INTERVAL = 500  # ミリ秒
 
 # --- 元画像 ---
 raw_frames = {
-    "idle": [
-        pygame.image.load("idle0.png").convert_alpha(),
-        pygame.image.load("idle1.png").convert_alpha(),
-    ],
     "run": [
         pygame.image.load("run0.png").convert_alpha(),
         pygame.image.load("run1.png").convert_alpha(),
